@@ -1,20 +1,30 @@
 //! Writes the HTML pages that make up the gallery.
-//!
-//! Currently, this is
-//! * an overview page showing all the images,
-//! * one page per image group for image groups with markdown files.
 use super::Config;
 
 use crate::error::{ path_error, PathErrorContext };
 use crate::model::{ Gallery, Image, Collection };
 
-use anyhow::{Context, Result};
+use anyhow::{ Context, Result };
 use handlebars::Handlebars;
 use serde::Serialize;
 use std::fs;
 use std::path::{Path, PathBuf};
 
 pub(super) struct Templates<'a>(Handlebars<'a>);
+
+/// An HTML file ready to be written to disk.
+pub struct HTMLFile {
+    content: String,
+    output_path: PathBuf,
+}
+
+impl HTMLFile {
+    pub fn write(&self) -> Result<()> {
+        std::fs::create_dir_all(&self.output_path.parent().path_context("Could not determine parent directory", &self.output_path)?)?;
+        fs::write(&self.output_path, &self.content)
+            .path_context("Failed to write HTML file", &self.output_path)
+    }
+}
 
 pub(super) fn make_templates<'a>() -> Result<Templates<'a>> {
     let mut handlebars = Handlebars::new();
@@ -27,7 +37,7 @@ pub(super) fn make_templates<'a>() -> Result<Templates<'a>> {
     Ok(Templates(handlebars))
 }
 
-pub(super) fn render_overview_html(gallery: &Gallery, config: &Config, templates: &Templates) -> Result<HTMLFile> {
+pub(super) fn render_gallery_html(gallery: &Gallery, config: &Config, templates: &Templates) -> Result<HTMLFile> {
     let data = GalleryData {
         collections: gallery
             .collections
@@ -72,36 +82,17 @@ pub(super) fn render_collection_html(collection: &Collection, config: &Config, t
     }))
 }
 
-/// An HTML file ready to be written to disk.
-pub struct HTMLFile {
-    content: String,
-    output_path: PathBuf,
-}
-
-impl HTMLFile {
-    /// Writes the HTML file to disk.
-    pub fn write(&self) -> Result<()> {
-        std::fs::create_dir_all(&self.output_path.parent().path_context("Could not determine parent directory", &self.output_path)?)?;
-        fs::write(&self.output_path, &self.content)
-            .path_context("Failed to write HTML file", &self.output_path)
-    }
-}
-
 /// Used in handlebars templates to describe a gallery.
 #[derive(Serialize)]
 struct GalleryData {
     collections: Vec<CollectionData>,
 }
 
-// #[derive(Serialize)]
-// struct Collections(Vec<CollectionData>);
-
-/// Used in handlebars templates to describe an image group.
+/// Used in handlebars templates to describe a collection.
 #[derive(Serialize)]
 struct CollectionData {
-    title: Option<String>,
+    title: String,
     date: String,
-    markdown_content: Option<String>,
     images: Vec<ImageData>,
     url: String,
 }
@@ -117,22 +108,14 @@ struct ImageData {
 
 impl CollectionData {
     fn from_collection(collection: &Collection) -> Result<CollectionData> {
-        // Suppress the title if it's redundant.
-        let title =
-            if collection.images.len() == 1 && collection.images[0].name == collection.title {
-                None
-            } else {
-                Some(collection.title.clone())
-            };
         let images = collection
             .images
             .iter()
             .map(|image| ImageData::from_image(image, collection))
             .collect::<Result<Vec<_>>>()?;
         let data = CollectionData {
-            title,
+            title: collection.title.clone(),
             date: collection.date.to_string(),
-            markdown_content: None,
             images,
             url: url_to_string(&collection.url()?)?
         };

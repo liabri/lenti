@@ -18,34 +18,33 @@ pub(crate) struct Config {
     pub output_path: PathBuf,
 }
 
-/// Writes the gallery to disk.
+/// Writes everything to disk.
 pub(crate) fn write_files(gallery: &Gallery, config: &Config) -> Result<()> {
     let templates = html::make_templates()?;
 
-    // Create work items.
-    let html = vec![html::render_overview_html(gallery, config, &templates)?];
-    let collections = vec![html::render_collections_html(gallery, config, &templates)?];
-    let mut html2 = Vec::new();
-    let mut thumbnails = Vec::new();
+    // Collect items to write
+    let gallery_html = vec![html::render_gallery_html(gallery, config, &templates)?];
+    let collections_html = vec![html::render_collections_html(gallery, config, &templates)?];
+    // let (collection, thumbnails) = gallery.collections.into_iter().for_each(|i| {
 
+    // }).collect::<Vec<>>(); 
+
+    let mut collection_html = Vec::new();
+    let mut thumbnails = Vec::new();
     for i in &gallery.collections {
-        html2.extend(html::render_collection_html(i, config, &templates)?);
+        collection_html.extend(html::render_collection_html(i, config, &templates)?);
         thumbnails.extend(thumbnail::render_thumbnails(i, config)?);
     }
 
+    let x = gallery_html.into_par_iter();
+        //    .map(|item| item.write())
+        // .collect::<Result<Vec<_>>>()?; 
 
-    // find a better way to do them all parallely
-    html.into_par_iter()
-           .map(|item| item.write())
-        .collect::<Result<Vec<_>>>()?; 
+    let y = collections_html.into_par_iter();
+        // .map(|item| item.write())
+        // .collect::<Result<Vec<_>>>()?;
 
-    collections.into_par_iter()
-        .map(|item| item.write())
-        .collect::<Result<Vec<_>>>()?; 
-
-
-
-    html2.into_par_iter()
+    collection_html.into_par_iter()
            .map(|item| item.write())
         .collect::<Result<Vec<_>>>()?; 
 
@@ -53,13 +52,13 @@ pub(crate) fn write_files(gallery: &Gallery, config: &Config) -> Result<()> {
            .map(|item| item.write())
         .collect::<Result<Vec<_>>>()?; 
         
-    write_static(config)
+    write_css(config)
 }
 
 /// Writes static assets such as CSS files to disk.
-fn write_static(config: &Config) -> Result<()> {
-    let custom_css_path = config.output_path.join("css").join("index.css");
-    let carousel = config.output_path.join("css").join("carousel.css");
+fn write_css(config: &Config) -> Result<()> {
+    let custom_css_path = config.output_path.join("index.css");
+    let carousel = config.output_path.join("carousel.css");
 
     for (path, content) in [
         (&custom_css_path, include_str!("../../templates/index.css")),
