@@ -2,7 +2,7 @@
 //!
 //! This is a read-only operation.
 use crate::error::PathErrorContext;
-use crate::model::{Gallery, Image, ImageGroup};
+use crate::model::{Gallery, Image, Collection};
 
 use anyhow::Result;
 use std::path::{Path, PathBuf};
@@ -10,10 +10,10 @@ use std::{fmt, fs};
 use time::{macros::format_description, Date};
 
 pub(crate) fn gallery_from_dir(path: &Path) -> Result<Gallery> {
-    let mut collections = Vec::<ImageGroup>::new();
+    let mut collections = Vec::<Collection>::new();
     for d in read_dir(path)?.iter().filter(|d| d.is_dir) {
         let contents = read_dir(&d.path)?;
-        if let Some(group) = ImageGroup::from_entries(&d.file_name, &contents)? {
+        if let Some(group) = Collection::from_entries(&d.file_name, &contents)? {
             collections.push(group);
         }
     }
@@ -27,8 +27,8 @@ impl Image {
     }
 }
 
-impl ImageGroup {
-    fn from_entries(path: &Path, v: &[DirEntry]) -> Result<Option<ImageGroup>> {
+impl Collection {
+    fn from_entries(path: &Path, v: &[DirEntry]) -> Result<Option<Collection>> {
         // let (title, date) = {
         //     let id = path.to_str().unwrap_or("");
         //     let re = Regex::new(r"^(\d{4}-\d{2}-\d{2}).").unwrap();
@@ -62,7 +62,7 @@ impl ImageGroup {
         }
         
         images.sort();
-        Ok(Some(ImageGroup {
+        Ok(Some(Collection {
             path: path.to_owned(),
             title,
             date,
@@ -118,7 +118,7 @@ fn read_dir(base_dir: &Path) -> Result<Vec<DirEntry>> {
 
 #[cfg(test)]
 mod tests {
-    use super::{DirEntry, Image, ImageGroup};
+    use super::{DirEntry, Image, Collection};
     use std::path::{Path, PathBuf};
     use time::{Date, Month};
 
@@ -132,7 +132,7 @@ mod tests {
             })
             .collect()
     }
-    struct SimpleImageGroup<'a> {
+    struct SimpleCollection<'a> {
         name: &'a str,
         title: &'a str,
         date: Date,
@@ -140,9 +140,9 @@ mod tests {
         images: &'a [(&'a str, &'a str)],
         markdown_file: Option<&'a str>,
     }
-    impl<'a> From<SimpleImageGroup<'a>> for ImageGroup {
-        fn from(s: SimpleImageGroup) -> ImageGroup {
-            ImageGroup {
+    impl<'a> From<SimpleCollection<'a>> for Collection {
+        fn from(s: SimpleCollection) -> Collection {
+            Collection {
                 path: PathBuf::from(s.name),
                 title: String::from(s.title),
                 date: s.date,
@@ -163,8 +163,8 @@ mod tests {
     #[test]
     fn test_empty_dir() {
         assert_eq!(
-            ImageGroup::from_entries(Path::new("2021-01-01 Fuji, Japan"), &[]).unwrap(),
-            Some(ImageGroup::from(SimpleImageGroup {
+            Collection::from_entries(Path::new("2021-01-01 Fuji, Japan"), &[]).unwrap(),
+            Some(Collection::from(SimpleCollection {
                 title: "Fuji, Japan",
                 name: "2021-01-01 Fuji, Japan",
                 date: Date::from_calendar_date(2021, Month::January, 01).unwrap(),
@@ -176,7 +176,7 @@ mod tests {
     #[test]
     fn test_simple_dir() {
         assert_eq!(
-            ImageGroup::from_entries(
+            Collection::from_entries(
                 Path::new("2021-01-01 Fuji, Japan"),
                 &dir(
                     "2021-01-01 Fuji, Japan",
@@ -184,7 +184,7 @@ mod tests {
                 )
             )
             .unwrap(),
-            Some(ImageGroup::from(SimpleImageGroup {
+            Some(Collection::from(SimpleCollection {
                 name: "2021-01-01 Fuji, Japan",
                 title: "Fuji, Japan",
                 date: Date::from_calendar_date(2021, Month::January, 01).unwrap(),
@@ -199,12 +199,12 @@ mod tests {
     #[test]
     fn test_index() {
         assert_eq!(
-            ImageGroup::from_entries(
+            Collection::from_entries(
                 Path::new("2021-01-01 Fuji, Japan"),
                 &dir("some/path/2021-01-01 Fuji, Japan", &[("index.md", false)])
             )
             .unwrap(),
-            Some(ImageGroup::from(SimpleImageGroup {
+            Some(Collection::from(SimpleCollection {
                 name: "2021-01-01 Fuji, Japan",
                 title: "Fuji, Japan",
                 date: Date::from_calendar_date(2021, Month::January, 01).unwrap(),
@@ -216,7 +216,7 @@ mod tests {
     #[test]
     fn test_ignored_entries() {
         assert_eq!(
-            ImageGroup::from_entries(
+            Collection::from_entries(
                 Path::new("2021-12-01 Fuji, Japan"),
                 &dir(
                     "some/path/2021-12-01 Fuji, Japan",
@@ -228,7 +228,7 @@ mod tests {
                 )
             )
             .unwrap(),
-            Some(ImageGroup::from(SimpleImageGroup {
+            Some(Collection::from(SimpleCollection {
                 name: "2021-12-01 Fuji, Japan",
                 title: "Fuji, Japan",
                 date: Date::from_calendar_date(2021, Month::December, 01).unwrap(),
@@ -240,7 +240,7 @@ mod tests {
     #[test]
     fn test_missing_date_in_dirname() {
         assert_eq!(
-            ImageGroup::from_entries(
+            Collection::from_entries(
                 Path::new("2021-01 Fuji, Japan"),
                 &dir("some/path/2021-01 Fuji, Japan", &[("Summit.webp", false)])
             )

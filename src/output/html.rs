@@ -5,8 +5,8 @@
 //! * one page per image group for image groups with markdown files.
 use super::Config;
 
-use crate::error::{path_error, PathErrorContext};
-use crate::model::{Gallery, Image, ImageGroup};
+use crate::error::{ path_error, PathErrorContext };
+use crate::model::{ Gallery, Image, Collection };
 
 use anyhow::{Context, Result};
 use handlebars::Handlebars;
@@ -32,7 +32,7 @@ pub(super) fn render_overview_html(gallery: &Gallery, config: &Config, templates
         collections: gallery
             .collections
             .iter()
-            .map(|group| ImageGroupData::from_collection(group))
+            .map(|group| CollectionData::from_collection(group))
             .collect::<Result<Vec<_>>>()?,
     };
 
@@ -48,7 +48,7 @@ pub(super) fn render_overview_html(gallery: &Gallery, config: &Config, templates
 pub(super) fn render_collections_html(gallery: &Gallery, config: &Config, templates: &Templates) -> Result<HTMLFile> {
     let mut data = std::collections::BTreeMap::new();
     data.insert("collections".to_string(), gallery.collections.iter()
-        .map(|group| ImageGroupData::from_collection(group))
+        .map(|group| CollectionData::from_collection(group))
         .collect::<Result<Vec<_>>>()?);
 
     Ok(HTMLFile {
@@ -60,9 +60,9 @@ pub(super) fn render_collections_html(gallery: &Gallery, config: &Config, templa
     })
 }
 
-pub(super) fn render_collection_html(collection: &ImageGroup, config: &Config, templates: &Templates) -> Result<Option<HTMLFile>> {
+pub(super) fn render_collection_html(collection: &Collection, config: &Config, templates: &Templates) -> Result<Option<HTMLFile>> {
     let mut data = std::collections::BTreeMap::new();
-    data.insert("collection".to_string(), ImageGroupData::from_collection(collection)?);
+    data.insert("collection".to_string(), CollectionData::from_collection(collection)?);
 
     Ok(Some(HTMLFile {
         content: templates.0.render("collection", &data).with_context(|| {
@@ -90,15 +90,15 @@ impl HTMLFile {
 /// Used in handlebars templates to describe a gallery.
 #[derive(Serialize)]
 struct GalleryData {
-    collections: Vec<ImageGroupData>,
+    collections: Vec<CollectionData>,
 }
 
 // #[derive(Serialize)]
-// struct Collections(Vec<ImageGroupData>);
+// struct Collections(Vec<CollectionData>);
 
 /// Used in handlebars templates to describe an image group.
 #[derive(Serialize)]
-struct ImageGroupData {
+struct CollectionData {
     title: Option<String>,
     date: String,
     markdown_content: Option<String>,
@@ -115,8 +115,8 @@ struct ImageData {
     anchor: String,
 }
 
-impl ImageGroupData {
-    fn from_collection(collection: &ImageGroup) -> Result<ImageGroupData> {
+impl CollectionData {
+    fn from_collection(collection: &Collection) -> Result<CollectionData> {
         // Suppress the title if it's redundant.
         let title =
             if collection.images.len() == 1 && collection.images[0].name == collection.title {
@@ -129,7 +129,7 @@ impl ImageGroupData {
             .iter()
             .map(|image| ImageData::from_image(image, collection))
             .collect::<Result<Vec<_>>>()?;
-        let data = ImageGroupData {
+        let data = CollectionData {
             title,
             date: collection.date.to_string(),
             markdown_content: None,
@@ -143,7 +143,7 @@ impl ImageGroupData {
 }
 
 impl ImageData {
-    fn from_image(image: &Image, collection: &ImageGroup) -> Result<ImageData> {
+    fn from_image(image: &Image, collection: &Collection) -> Result<ImageData> {
         Ok(ImageData {
             file_name: url_to_string(&image.url_file_name()?)?,
             name: image.name.clone(),

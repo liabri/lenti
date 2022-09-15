@@ -1,13 +1,13 @@
 //! Creates & writes the thumbnails that make up the gallery.
 
 use super::Config;
-use crate::model::{ Image, ImageGroup };
+use crate::model::{ Image, Collection };
 use anyhow::Result;
 use std::path::{ Path, PathBuf };
 use image::ImageOutputFormat;
 
 /// Prepares an image group for writing.
-pub(super) fn render_thumbnails(image_group: &ImageGroup, config: &Config) -> Result<Vec<Thumbnail>> {
+pub(super) fn render_thumbnails(image_group: &Collection, config: &Config) -> Result<Vec<Thumbnail>> {
     let mut res = Vec::new();
     for img in &image_group.images {
         if let Some(thumbnail) = render_thumbnail(img, image_group, config) {
@@ -26,7 +26,7 @@ pub struct Thumbnail {
 }
 
 /// Prepares a single thumbnail for writing if it does not currently exist
-fn render_thumbnail(image: &Image, group: &ImageGroup, config: &Config) -> Option<Thumbnail> {
+fn render_thumbnail(image: &Image, group: &Collection, config: &Config) -> Option<Thumbnail> {
     let p = config.output_path.join(image.thumbnail_url(group).unwrap());
     
     if !needs_update(&image.path, &config.output_path) {
