@@ -1,0 +1,20 @@
+[package]
+name = "gallery"
+version = "0.1.1"
+edition = "2021"
+description = "A static site generator for photo galleries"
+
+[dependencies]
+anyhow = "1.0.56"
+clap = { version = "3.1.6", features = ["derive"] }
+handlebars = { version = "4.3.0", features = ["script_helper"] }
+rayon = "1.5.1"
+serde = { version = "1.0.136", features = ["derive"] }
+slug = "0.1.4"
+time = { version = "0.3.9", features = ["macros", "parsing"] }
+image = "0.24.3"
+chrono = "0.4.22"
+date-range = "0.2.2"
+
+[dev-dependencies]
+tempfile = "3.3.0"
