@@ -22,8 +22,8 @@ pub(super) fn make_templates<'a>() -> Result<Templates<'a>> {
     handlebars.register_template_string("gallery", include_str!("../../templates/gallery.hbs"))?;
     handlebars.register_template_string("collections", include_str!("../../templates/collections.hbs"))?;
     handlebars.register_template_string("collection", include_str!("../../templates/collection.hbs"))?;
-    handlebars.register_script_helper_file("inc", "/home/liabri/dev/web/html/photography/generator/scripts/inc.rhai")?;
-    handlebars.register_script_helper_file("dec", "/home/liabri/dev/web/html/photography/generator/scripts/dec.rhai")?;
+    handlebars.register_script_helper_file("inc", "../../scripts/inc.rhai")?;
+    handlebars.register_script_helper_file("dec", "../../scripts/dec.rhai")?;
     Ok(Templates(handlebars))
 }
 
@@ -32,7 +32,7 @@ pub(super) fn render_overview_html(gallery: &Gallery, config: &Config, templates
         collections: gallery
             .collections
             .iter()
-            .map(|group| ImageGroupData::from_collection(config, group))
+            .map(|group| ImageGroupData::from_collection(group))
             .collect::<Result<Vec<_>>>()?,
     };
 
@@ -48,7 +48,7 @@ pub(super) fn render_overview_html(gallery: &Gallery, config: &Config, templates
 pub(super) fn render_collections_html(gallery: &Gallery, config: &Config, templates: &Templates) -> Result<HTMLFile> {
     let mut data = std::collections::BTreeMap::new();
     data.insert("collections".to_string(), gallery.collections.iter()
-        .map(|group| ImageGroupData::from_collection(config, group))
+        .map(|group| ImageGroupData::from_collection(group))
         .collect::<Result<Vec<_>>>()?);
 
     Ok(HTMLFile {
@@ -62,7 +62,7 @@ pub(super) fn render_collections_html(gallery: &Gallery, config: &Config, templa
 
 pub(super) fn render_collection_html(collection: &ImageGroup, config: &Config, templates: &Templates) -> Result<Option<HTMLFile>> {
     let mut data = std::collections::BTreeMap::new();
-    data.insert("collection".to_string(), ImageGroupData::from_collection(config, collection)?);
+    data.insert("collection".to_string(), ImageGroupData::from_collection(collection)?);
 
     Ok(Some(HTMLFile {
         content: templates.0.render("collection", &data).with_context(|| {
@@ -83,8 +83,7 @@ impl HTMLFile {
     pub fn write(&self) -> Result<()> {
         std::fs::create_dir_all(&self.output_path.parent().path_context("Could not determine parent directory", &self.output_path)?)?;
         fs::write(&self.output_path, &self.content)
-            .path_context("Failed to write HTML file", &self.output_path);
-        Ok(())
+            .path_context("Failed to write HTML file", &self.output_path)
     }
 }
 
@@ -117,7 +116,7 @@ struct ImageData {
 }
 
 impl ImageGroupData {
-    fn from_collection(config: &Config, collection: &ImageGroup) -> Result<ImageGroupData> {
+    fn from_collection(collection: &ImageGroup) -> Result<ImageGroupData> {
         // Suppress the title if it's redundant.
         let title =
             if collection.images.len() == 1 && collection.images[0].name == collection.title {

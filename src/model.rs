@@ -1,11 +1,9 @@
-//! Data structures to represent image galleries throughput the program.
 use crate::error::{path_error, PathErrorContext};
 
 use anyhow::Result;
-use std::fmt;
 use std::path::{Path, PathBuf};
 use time::Date;
-use chrono::DateTime;
+// use chrono::DateTime;
 
 /// An unorganised endless gallery of all the images.
 #[derive(Debug)]
