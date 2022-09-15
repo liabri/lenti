@@ -3,7 +3,7 @@
 use super::Config;
 use crate::model::{ Image, ImageGroup };
 use anyhow::Result;
-use std::path::PathBuf;
+use std::path::{ Path, PathBuf };
 use image::ImageOutputFormat;
 
 /// Prepares an image group for writing.
@@ -29,7 +29,7 @@ pub struct Thumbnail {
 fn render_thumbnail(image: &Image, group: &ImageGroup, config: &Config) -> Option<Thumbnail> {
     let p = config.output_path.join(image.thumbnail_url(group).unwrap());
     
-    if p.exists() {
+    if !needs_update(&image.path, &config.output_path) {
         None
     } else {
         Some(Thumbnail {
@@ -39,23 +39,19 @@ fn render_thumbnail(image: &Image, group: &ImageGroup, config: &Config) -> Optio
     }
 }
 
-/// Returns true if the output is stale and needs to be rewritten.
-// fn needs_update(input_path: &Path, output_path: &Path) -> bool {
-//     let res = || -> Result<bool> {
-//         let output_modified = output_path.metadata()?.modified()?;
-//         let input_modified = input_path.metadata()?.modified()?;
-//         // Needs update if the output is older than the input.
-//         Ok(output_modified < input_modified)
-//     };
-//     res().unwrap_or(true)
-// }
+fn needs_update(input_path: &Path, output_path: &Path) -> bool {
+    let res = || -> Result<bool> {
+        let output_modified = output_path.metadata()?.modified()?;
+        let input_modified = input_path.metadata()?.modified()?;
+        
+        // Needs update if the output is older than the input.
+        Ok(output_modified < input_modified)
+    };
+    res().unwrap_or(true)
+}
 
 impl Thumbnail {
     pub fn write(&self) -> Result<()> {
-        // if !needs_update(&self.input_path, &self.output_path) {
-        //     return Ok(());
-        // }
-
         // Resize image to suitable thumbnail size
         let mut img = image::open(&self.input_path)?;
         img = img.thumbnail(400, 400);
@@ -64,8 +60,7 @@ impl Thumbnail {
         std::fs::create_dir_all(&self.output_path.parent().unwrap())?;
         let file = std::fs::File::create(&self.output_path).unwrap();
         let mut writer = std::io::BufWriter::new(file);
-        img.write_to(&mut writer, ImageOutputFormat::Jpeg(40));
-
+        img.write_to(&mut writer, ImageOutputFormat::Jpeg(40))?;
         Ok(())
     }
 }
