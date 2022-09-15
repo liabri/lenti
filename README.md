@@ -1,3 +1,3 @@
-# Gallery
+# Lenti
 
-A static site generator for photo galleries.
+An opinionated static site generator for photo galleries.
