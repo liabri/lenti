@@ -1,10 +1,10 @@
 //! A static site generator for photo galleries.
 mod error;
-mod input;
 mod model;
+mod input;
 mod output;
 
-use anyhow::{Context, Result};
+use anyhow::{ Context, Result };
 use clap::Parser;
 use std::path::PathBuf;
 
@@ -12,10 +12,6 @@ use std::path::PathBuf;
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
 struct Cli {
-    /// If set, then don't write any files.
-    #[clap(long = "dry_run")]
-    dry_run: bool,
-
     /// The source directory.
     #[clap(long)]
     input: String,

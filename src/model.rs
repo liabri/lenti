@@ -10,12 +10,12 @@ use time::Date;
 pub(crate) struct Gallery {
     /// The list of image groups in the gallery.
     /// Sorted by date (most recent first).
-    pub collections: Vec<ImageGroup>,
+    pub collections: Vec<Collection>,
 }
 
 /// A collection of images.
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
-pub(crate) struct ImageGroup {
+pub(crate) struct Collection {
     /// The path to the image group directory relative to the base directory.
     pub path: PathBuf,
     /// The user-visible title of the image group.
@@ -26,7 +26,7 @@ pub(crate) struct ImageGroup {
     pub images: Vec<Image>,
 }
 
-impl ImageGroup {
+impl Collection {
     // do i want only ascii characters? fuck ascii-only...
     /// The URL to this image group, relative to the base directory, consisting only of ASCII characters.
     pub(crate) fn url(&self) -> Result<PathBuf> {
@@ -68,7 +68,7 @@ impl Image {
     }
 
     /// The URL to the thumbnail image relative to the output base directory.
-    pub(crate) fn thumbnail_url(&self, group: &ImageGroup) -> Result<PathBuf> {
+    pub(crate) fn thumbnail_url(&self, group: &Collection) -> Result<PathBuf> {
         let mut suffix = to_web_path(&group.path)?.join(to_web_path(&self.file_name)?);
         
         // Always use webp for thumbnails to get a reasonable quality.
