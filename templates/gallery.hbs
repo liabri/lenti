@@ -3,8 +3,8 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link href="css/index.css" rel="stylesheet">
-    <link href="css/carousel.css" rel="stylesheet">
+    <link href="index.css" rel="stylesheet">
+    <link href="carousel.css" rel="stylesheet">
     <title>Gallery</title>
   </head>
   <body>
@@ -23,7 +23,7 @@
                 <a id="{{@index}}" href="#{{@index}}">
                     <img class="carousel_thumb" src="{{thumbnail}}"/>
                     <span class="carousel_full">
-                      <img src="../albums/{{../url}}/{{file_name}}"/>
+                      <img src="data/albums/{{../url}}/{{file_name}}"/>
                     </span>
                 </a>
                 <a class="carousel_close" href="#collection"></a>

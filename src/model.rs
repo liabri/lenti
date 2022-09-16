@@ -73,7 +73,7 @@ impl Image {
         
         // Always use webp for thumbnails to get a reasonable quality.
         suffix.set_extension("jpg");
-        Ok(PathBuf::from("thumbnails").join(&suffix))
+        Ok(PathBuf::from("data").join("thumbnails").join(&suffix))
     }
 }
 
