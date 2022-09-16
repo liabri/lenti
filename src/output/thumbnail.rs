@@ -5,6 +5,7 @@ use crate::model::{ Image, Collection };
 use anyhow::Result;
 use std::path::{ Path, PathBuf };
 use image::ImageOutputFormat;
+// use imager::api::
 
 /// Prepares an image group for writing.
 pub(super) fn render_thumbnails(image_group: &Collection, config: &Config) -> Result<Vec<Thumbnail>> {
@@ -40,14 +41,20 @@ fn render_thumbnail(image: &Image, group: &Collection, config: &Config) -> Optio
 }
 
 fn needs_update(input_path: &Path, output_path: &Path) -> bool {
-    let res = || -> Result<bool> {
-        let output_modified = output_path.metadata()?.modified()?;
-        let input_modified = input_path.metadata()?.modified()?;
-        
-        // Needs update if the output is older than the input.
-        Ok(output_modified < input_modified)
-    };
-    res().unwrap_or(true)
+    if !output_path.exists() {
+        println!("making thumbnail");
+        let res = || -> Result<bool> {
+            let output_modified = output_path.metadata()?.modified()?;
+            let input_modified = input_path.metadata()?.modified()?;
+            
+            // Needs update if the output is older than the input.
+            Ok(output_modified < input_modified)
+        };
+
+        return res().unwrap_or(true)
+    }
+
+    true
 }
 
 impl Thumbnail {

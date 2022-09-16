@@ -8,7 +8,6 @@ use crate::model::Gallery;
 use crate::error::PathErrorContext;
 
 use anyhow::Result;
-use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use std::fs::{ write, create_dir_all };
 use std::path::PathBuf;
 
@@ -36,33 +35,33 @@ pub(crate) fn write_files(gallery: &Gallery, config: &Config) -> Result<()> {
         thumbnails.extend(thumbnail::render_thumbnails(i, config)?);
     }
 
-    let x = gallery_html.into_par_iter();
-        //    .map(|item| item.write())
-        // .collect::<Result<Vec<_>>>()?; 
-
-    let y = collections_html.into_par_iter();
-        // .map(|item| item.write())
-        // .collect::<Result<Vec<_>>>()?;
-
-    collection_html.into_par_iter()
-           .map(|item| item.write())
+    gallery_html.into_iter()
+        .map(|item| item.write())
         .collect::<Result<Vec<_>>>()?; 
 
-    thumbnails.into_par_iter()
-           .map(|item| item.write())
-        .collect::<Result<Vec<_>>>()?; 
+    collections_html.into_iter()
+        .map(|item| item.write())
+        .collect::<Result<Vec<_>>>()?;
+
+    collection_html.into_iter()
+        .map(|item| item.write())
+        .collect::<Result<Vec<_>>>()?;
+
+    // thumbnails.into_iter()
+    //     .map(|item| item.write())
+    //     .collect::<Result<Vec<_>>>()?; 
         
-    write_css(config)
+    write_static(config)
 }
 
 /// Writes static assets such as CSS files to disk.
-fn write_css(config: &Config) -> Result<()> {
-    let custom_css_path = config.output_path.join("index.css");
-    let carousel = config.output_path.join("carousel.css");
-
+fn write_static(config: &Config) -> Result<()> {
     for (path, content) in [
-        (&custom_css_path, include_str!("../../templates/index.css")),
-        (&carousel, include_str!("../../templates/carousel.css")),
+        (&config.output_path.join("index.css"), include_str!("../../templates/index.css")),
+        (&config.output_path.join("carousel.css"), include_str!("../../templates/carousel.css")),
+        // (&config.output_path.join("data").join("TiredOfCourierThin.ttf"), include_str!("../../data/fonts/TiredOfCourierThin.ttf")),
+        (&config.output_path.join("data").join("worm.svg"), include_str!("../../data/svgs/worm.svg")),
+
     ] {
         create_dir_all(path.parent().path_context("Could not determine parent directory", path)?)?;
         write(path, content).path_context("Failed to write asset", path)?;

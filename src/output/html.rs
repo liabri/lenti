@@ -32,8 +32,8 @@ pub(super) fn make_templates<'a>() -> Result<Templates<'a>> {
     handlebars.register_template_string("gallery", include_str!("../../templates/gallery.hbs"))?;
     handlebars.register_template_string("collections", include_str!("../../templates/collections.hbs"))?;
     handlebars.register_template_string("collection", include_str!("../../templates/collection.hbs"))?;
-    handlebars.register_script_helper_file("inc", "../../scripts/inc.rhai")?;
-    handlebars.register_script_helper_file("dec", "../../scripts/dec.rhai")?;
+    handlebars.register_script_helper_file("inc", "scripts/inc.rhai")?;
+    handlebars.register_script_helper_file("dec", "scripts/dec.rhai")?;
     Ok(Templates(handlebars))
 }
 
