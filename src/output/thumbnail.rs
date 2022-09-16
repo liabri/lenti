@@ -30,7 +30,7 @@ pub struct Thumbnail {
 fn render_thumbnail(image: &Image, group: &Collection, config: &Config) -> Option<Thumbnail> {
     let p = config.output_path.join(image.thumbnail_url(group).unwrap());
     
-    if !needs_update(&image.path, &config.output_path) {
+    if !needs_update(&image.path, &p) {
         None
     } else {
         Some(Thumbnail {
@@ -41,7 +41,8 @@ fn render_thumbnail(image: &Image, group: &Collection, config: &Config) -> Optio
 }
 
 fn needs_update(input_path: &Path, output_path: &Path) -> bool {
-    if !output_path.exists() {
+    println!("output path: {:?}", output_path);
+    if output_path.exists() {
         let res = || -> Result<bool> {
             let output_modified = output_path.metadata()?.modified()?;
             let input_modified = input_path.metadata()?.modified()?;
@@ -53,7 +54,7 @@ fn needs_update(input_path: &Path, output_path: &Path) -> bool {
         return res().unwrap_or(true)
     }
 
-    false
+    true
 }
 
 impl Thumbnail {
