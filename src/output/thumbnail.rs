@@ -42,7 +42,6 @@ fn render_thumbnail(image: &Image, group: &Collection, config: &Config) -> Optio
 
 fn needs_update(input_path: &Path, output_path: &Path) -> bool {
     if !output_path.exists() {
-        println!("making thumbnail");
         let res = || -> Result<bool> {
             let output_modified = output_path.metadata()?.modified()?;
             let input_modified = input_path.metadata()?.modified()?;
@@ -54,7 +53,7 @@ fn needs_update(input_path: &Path, output_path: &Path) -> bool {
         return res().unwrap_or(true)
     }
 
-    true
+    false
 }
 
 impl Thumbnail {

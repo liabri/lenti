@@ -47,9 +47,9 @@ pub(crate) fn write_files(gallery: &Gallery, config: &Config) -> Result<()> {
         .map(|item| item.write())
         .collect::<Result<Vec<_>>>()?;
 
-    // thumbnails.into_iter()
-    //     .map(|item| item.write())
-    //     .collect::<Result<Vec<_>>>()?; 
+    thumbnails.into_iter()
+        .map(|item| item.write())
+        .collect::<Result<Vec<_>>>()?; 
         
     write_static(config)
 }
