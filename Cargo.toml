@@ -1,5 +1,5 @@
 [package]
-name = "gallery"
+name = "lenti"
 version = "0.1.1"
 edition = "2021"
 description = "A static site generator for photo galleries"
@@ -9,6 +9,7 @@ anyhow = "1.0.56"
 clap = { version = "3.1.6", features = ["derive"] }
 handlebars = { version = "4.3.0", features = ["script_helper"] }
 serde = { version = "1.0.136", features = ["derive"] }
+zmerald = { git = "https://github.com/liabri/zmerald" }
 slug = "0.1.4"
 time = { version = "0.3.9", features = ["macros", "parsing"] }
 image = "0.24.3"

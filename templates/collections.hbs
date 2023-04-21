@@ -10,15 +10,15 @@
   <body>
     <main>
       <div id="header">
-        <h1 id="title">Collections</h1>
-        <a href="gallery.html" id="navigation">Gallery</a>
+        <div id="nav"><a href="gallery.html" id="navigation">Gallery</a></div>
+        <div id="title"><h1>Collections</h1></div>
       </div>
 
       <div class="container">
         <ul class="collections">
           {{#each collections}}
             <li class="collection">
-              <a href="collection/{{title}}.html">
+              <a href="collection/{{path}}.html">
                 <img src="{{images.0.thumbnail}}"/>
                 <div class="collection_overlay"><span>{{title}}</span></div>
               </a>
@@ -27,11 +27,5 @@
         </ul>
       </div>
     </main>
-
-    <footer>
-        <div id="rights">
-            All rights reserved. Contact: <a href="mailto:photos@example.com">photos@example.com</a>
-      </div>
-    </footer>
   </body>
 </html>

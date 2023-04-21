@@ -10,9 +10,11 @@
   <body>
     <main>
       <div id="header">
-        <h1 id="title">{{collection.title}}</h1>
-        <a href="../gallery.html" id="navigation">Gallery</a>
-        <a href="../collections.html" id="navigation">Collections</a>
+        <div id="nav">
+          <a href="../gallery.html" id="navigation">Gallery</a>
+          <a href="../collections.html" id="navigation">Collections</a>
+        </div>
+        <div id="title"><h1>{{collection.title}}</h1></div>
       </div>
 
       <div class="container">
@@ -36,11 +38,5 @@
         </ul>
       </div>
     </main>
-
-    <footer>
-        <div id="rights">
-            All rights reserved. Contact: <a href="mailto:photos@example.com">photos@example.com</a>
-      </div>
-    </footer>
   </body>
 </html>

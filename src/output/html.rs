@@ -12,7 +12,6 @@ use std::path::{Path, PathBuf};
 
 pub(super) struct Templates<'a>(Handlebars<'a>);
 
-/// An HTML file ready to be written to disk.
 pub struct HTMLFile {
     content: String,
     output_path: PathBuf,
@@ -37,22 +36,85 @@ pub(super) fn make_templates<'a>() -> Result<Templates<'a>> {
     Ok(Templates(handlebars))
 }
 
+
+
+
+
+
+
+
+
+
+
+/// Used in handlebars templates to describe a gallery.
+#[derive(Serialize)]
+struct GalleryData {
+    featured_images: Vec<ImageData>,
+}
+
+impl GalleryData {
+    fn from_gallery(gallery: &Gallery) -> Result<GalleryData> {
+        let mut featured_images: Vec<ImageData> = Vec::new();
+        for collection in &gallery.collections {
+            for image in &collection.images {
+                if collection.feat.contains(&image.name) {
+                    featured_images.push(ImageData::from_image(image.clone(), &collection)?);
+                }
+            }           
+        }
+
+        Ok(GalleryData{featured_images})
+    }
+}
+
 pub(super) fn render_gallery_html(gallery: &Gallery, config: &Config, templates: &Templates) -> Result<HTMLFile> {
-    let data = GalleryData {
-        collections: gallery
-            .collections
-            .iter()
-            .map(|group| CollectionData::from_collection(group))
-            .collect::<Result<Vec<_>>>()?,
-    };
+    // let mut data = std::collections::BTreeMap::new();
+    // data.insert("gallery".to_string(), );
 
     Ok(HTMLFile {
         content: templates
             .0
-            .render("gallery", &data)
+            .render("gallery", &GalleryData::from_gallery(gallery)?)
             .with_context(|| "Failed to render gallery HTML page")?,
         output_path: config.output_path.join("gallery.html"),
     })
+}
+
+
+
+
+
+
+
+
+/// Used in handlebars templates to describe a collection.
+#[derive(Serialize)]
+struct CollectionData {
+    path: String,
+    title: String,
+    date: String,
+    images: Vec<ImageData>,
+    url: String,
+}
+
+impl CollectionData {
+    fn from_collection(collection: &Collection) -> Result<CollectionData> {
+        let images = collection
+            .images
+            .iter()
+            .map(|image| ImageData::from_image(image, collection))
+            .collect::<Result<Vec<_>>>()?;
+
+        let data = CollectionData {
+            path: collection.path.display().to_string(),
+            title: collection.title.clone(),
+            date: collection.date.to_string(),
+            images,
+            url: url_to_string(&collection.url()?)?
+        };
+
+        Ok(data)
+    }
 }
 
 pub(super) fn render_collections_html(gallery: &Gallery, config: &Config, templates: &Templates) -> Result<HTMLFile> {
@@ -78,51 +140,25 @@ pub(super) fn render_collection_html(collection: &Collection, config: &Config, t
         content: templates.0.render("collection", &data).with_context(|| {
             format!("Failed to render HTML page for image group \"{}\"", collection.title)
         })?,
-        output_path: config.output_path.join("collection").join(&collection.title).with_extension("html"),
+        output_path: config.output_path.join("collection").join(&collection.path).with_extension("html"),
     }))
 }
 
-/// Used in handlebars templates to describe a gallery.
-#[derive(Serialize)]
-struct GalleryData {
-    collections: Vec<CollectionData>,
-}
 
-/// Used in handlebars templates to describe a collection.
-#[derive(Serialize)]
-struct CollectionData {
-    title: String,
-    date: String,
-    images: Vec<ImageData>,
-    url: String,
-}
+
+
+
+
+
 
 /// Used in handlebars templates to describe a single image.
-#[derive(Serialize)]
+#[derive(Debug, Serialize)]
 struct ImageData {
     file_name: String,
     name: String,
     thumbnail: String,
     anchor: String,
-}
-
-impl CollectionData {
-    fn from_collection(collection: &Collection) -> Result<CollectionData> {
-        let images = collection
-            .images
-            .iter()
-            .map(|image| ImageData::from_image(image, collection))
-            .collect::<Result<Vec<_>>>()?;
-        let data = CollectionData {
-            title: collection.title.clone(),
-            date: collection.date.to_string(),
-            images,
-            url: url_to_string(&collection.url()?)?
-        };
-
-        Ok(data)
-    }
-
+    collection: String
 }
 
 impl ImageData {
@@ -132,9 +168,21 @@ impl ImageData {
             name: image.name.clone(),
             thumbnail: url_to_string(&image.thumbnail_url(collection)?)?,
             anchor: slug::slugify(&image.name),
+            collection: collection.path.display().to_string()
         })
     }
 }
+
+
+
+
+
+
+
+
+
+
+
 
 /// Converts a URL from path form into a string.
 /// The path components will be joined by slashes.

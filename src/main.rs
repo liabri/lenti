@@ -7,6 +7,7 @@ mod output;
 use anyhow::{ Context, Result };
 use clap::Parser;
 use std::path::PathBuf;
+use model::Gallery;
 
 /// Commandline arguments.
 #[derive(Parser, Debug)]
@@ -32,7 +33,7 @@ impl Cli {
 fn run_on_args(args: impl Iterator<Item = std::ffi::OsString>) -> Result<()> {
     let args = Cli::parse_from(args);
     let input_path = PathBuf::from(&args.input);
-    let gallery = input::gallery_from_dir(&input_path).with_context(|| "Failed to read gallery")?;
+    let gallery = Gallery::from_path(&input_path).with_context(|| "Failed to read gallery")?;
     output::write_files(&gallery, &args.output_config()).with_context(|| "Failed to write gallery")
 }
 
