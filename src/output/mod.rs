@@ -9,63 +9,54 @@ use crate::error::PathErrorContext;
 
 use anyhow::Result;
 use std::fs::{ write, create_dir_all };
-use std::path::PathBuf;
+use std::path::{ Path, PathBuf };
+use glob::glob;
 
 /// Configuration options for the output module.
 pub(crate) struct Config {
+    /// The directory which contains the gallery.
+    pub input_path: PathBuf,
     /// The target directory where to write the gallery.
     pub output_path: PathBuf,
+    /// The directory which contains the templates and scripts.
+    pub resources_path: PathBuf,
 }
 
 /// Writes everything to disk.
 pub(crate) fn write_files(gallery: &Gallery, config: &Config) -> Result<()> {
-    let templates = html::make_templates()?;
+    // Register templates and scripts
+    let templates = html::make_templates(config)?;
 
-    // Collect items to write
-    let gallery_html = vec![html::render_gallery_html(gallery, config, &templates)?];
-    let collections_html = vec![html::render_collections_html(gallery, config, &templates)?];
-    // let (collection, thumbnails) = gallery.collections.into_iter().for_each(|i| {
-
-    // }).collect::<Vec<>>(); 
-
-    let mut collection_html = Vec::new();
-    let mut thumbnails = Vec::new();
-    for i in &gallery.collections {
-        collection_html.extend(html::render_collection_html(i, config, &templates)?);
-        thumbnails.extend(thumbnail::render_thumbnails(i, config)?);
+    // Collect and write
+    html::render_gallery_html(gallery, config, &templates)?.write()?;
+    html::render_collections_html(gallery, config, &templates)?.write()?;
+    for coll in &gallery.collections {
+        if let Some(coll) = html::render_collection_html(coll, config, &templates)? { coll.write()?; }
+        for img in &coll.images {
+            if let Some(thumbnail) = thumbnail::render_thumbnail(&img, coll, config) { thumbnail.write()?; }
+            copy(&img.path, &config.output_path.join("data").join("albums").join(&coll.path).join(&img.file_name))?;
+        }
+        println!("DE {:?}", &coll.path.join("collection-info.zm"));
+        println!("DE {:?}", &config.output_path.join("data").join("albums").join(&coll.path).join("collection-info.zm"));
+        copy(&config.input_path.join(&coll.path).join("collection-info.zm"), &config.output_path.join("data").join("albums").join(&coll.path).join("collection-info.zm"))?;
     }
-
-    gallery_html.into_iter()
-        .map(|item| item.write())
-        .collect::<Result<Vec<_>>>()?; 
-
-    collections_html.into_iter()
-        .map(|item| item.write())
-        .collect::<Result<Vec<_>>>()?;
-
-    collection_html.into_iter()
-        .map(|item| item.write())
-        .collect::<Result<Vec<_>>>()?;
-
-    thumbnails.into_iter()
-        .map(|item| item.write())
-        .collect::<Result<Vec<_>>>()?; 
         
     write_static(config)
 }
 
 /// Writes static assets such as CSS files to disk.
 fn write_static(config: &Config) -> Result<()> {
-    for (path, content) in [
-        (&config.output_path.join("index.css"), include_str!("../../templates/index.css")),
-        (&config.output_path.join("carousel.css"), include_str!("../../templates/carousel.css")),
-        // (&config.output_path.join("data").join("TiredOfCourierThin.ttf"), include_str!("../../data/fonts/TiredOfCourierThin.ttf")),
-        (&config.output_path.join("data").join("worm.svg"), include_str!("../../data/svgs/worm.svg")),
-
-    ] {
-        create_dir_all(path.parent().path_context("Could not determine parent directory", path)?)?;
-        write(path, content).path_context("Failed to write asset", path)?;
+    let res = config.resources_path.join("**/*.css").display().to_string();
+    for stylesheet in glob(&res)? {
+        if let Ok(stylesheet) = stylesheet {
+            copy(&stylesheet, &config.output_path.join(&stylesheet.file_name().unwrap()))?;
+        }
     }
+    Ok(())
+}
 
+pub(crate) fn copy(input_path: &Path, output_path: &Path) -> Result<()> {
+    std::fs::create_dir_all(&output_path.parent().unwrap())?;
+    std::fs::copy(input_path, output_path)?;
     Ok(())
 }

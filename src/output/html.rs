@@ -9,6 +9,7 @@ use handlebars::Handlebars;
 use serde::Serialize;
 use std::fs;
 use std::path::{Path, PathBuf};
+use glob::glob;
 
 pub(super) struct Templates<'a>(Handlebars<'a>);
 
@@ -25,26 +26,28 @@ impl HTMLFile {
     }
 }
 
-pub(super) fn make_templates<'a>() -> Result<Templates<'a>> {
+pub(super) fn make_templates<'a>(config: &Config) -> Result<Templates<'a>> {
     let mut handlebars = Handlebars::new();
     handlebars.set_strict_mode(true);
-    handlebars.register_template_string("gallery", include_str!("../../templates/gallery.hbs"))?;
-    handlebars.register_template_string("collections", include_str!("../../templates/collections.hbs"))?;
-    handlebars.register_template_string("collection", include_str!("../../templates/collection.hbs"))?;
-    handlebars.register_script_helper_file("inc", "scripts/inc.rhai")?;
-    handlebars.register_script_helper_file("dec", "scripts/dec.rhai")?;
+
+    let res = config.resources_path.join("**/*.hbs").display().to_string();
+    for template in glob(&res)? {
+        let t = template?;
+        let file_name = t.file_stem().and_then(|s| s.to_str()).unwrap();
+        let source = config.resources_path.join("templates").join(file_name).with_extension("hbs").into_os_string().into_string().unwrap();
+        handlebars.register_template_file(file_name, source)?;
+    }
+
+    let res = config.resources_path.join("**/*.rhai").display().to_string();
+    for script in glob(&res)? {
+        let s = script?;
+        let file_name = s.file_stem().and_then(|s| s.to_str()).unwrap();
+        let source = config.resources_path.join("scripts").join(file_name).with_extension("rhai").into_os_string().into_string().unwrap();
+        handlebars.register_script_helper_file(file_name, source)?;
+    }
+
     Ok(Templates(handlebars))
 }
-
-
-
-
-
-
-
-
-
-
 
 /// Used in handlebars templates to describe a gallery.
 #[derive(Serialize)]
@@ -79,13 +82,6 @@ pub(super) fn render_gallery_html(gallery: &Gallery, config: &Config, templates:
         output_path: config.output_path.join("gallery.html"),
     })
 }
-
-
-
-
-
-
-
 
 /// Used in handlebars templates to describe a collection.
 #[derive(Serialize)]
@@ -144,13 +140,6 @@ pub(super) fn render_collection_html(collection: &Collection, config: &Config, t
     }))
 }
 
-
-
-
-
-
-
-
 /// Used in handlebars templates to describe a single image.
 #[derive(Debug, Serialize)]
 struct ImageData {
@@ -172,17 +161,6 @@ impl ImageData {
         })
     }
 }
-
-
-
-
-
-
-
-
-
-
-
 
 /// Converts a URL from path form into a string.
 /// The path components will be joined by slashes.

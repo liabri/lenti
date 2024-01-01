@@ -38,9 +38,6 @@ impl DirEntry {
     }
 }
 
-
-
-
 impl Gallery {
     pub fn from_path(path: &Path) -> Result<Gallery> {
         let mut collections = Vec::<Collection>::new();
@@ -57,12 +54,6 @@ impl Gallery {
         Ok(Gallery { collections })
     }
 }
-
-
-
-
-
-
 
 impl Collection {
     fn from_entries(path: &Path, v: &[DirEntry]) -> Result<Option<Collection>> {
@@ -92,30 +83,11 @@ impl Collection {
     }
 }
 
-
-
-
-
 impl Image {
     fn from(d: &DirEntry) -> Result<Image> {
         Image::new(d.file_name.clone(), d.path.clone())
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // Reads a directory non-recursively.
 fn read_dir(base_dir: &Path) -> Result<Vec<DirEntry>> {
@@ -138,12 +110,8 @@ fn read_dir(base_dir: &Path) -> Result<Vec<DirEntry>> {
     Ok(res)
 }
 
-
-
-
-
-// impl fmt::Display for DirEntry {
-//     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+// impl std::fmt::Display for DirEntry {
+//     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
 //         write!(f, "{}", self.path.to_string_lossy())
 //     }
 // }

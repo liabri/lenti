@@ -8,16 +8,16 @@ use image::ImageOutputFormat;
 // use imager::api::
 
 /// Prepares an image group for writing.
-pub(super) fn render_thumbnails(image_group: &Collection, config: &Config) -> Result<Vec<Thumbnail>> {
-    let mut res = Vec::new();
-    for img in &image_group.images {
-        if let Some(thumbnail) = render_thumbnail(img, image_group, config) {
-            res.push(thumbnail);
-        }
-    }
+// pub(super) fn render_thumbnails(image_group: &Collection, config: &Config) -> Result<Vec<Thumbnail>> {
+//     let mut res = Vec::new();
+//     for img in &image_group.images {
+//         if let Some(thumbnail) = render_thumbnail(img, image_group, config) {
+//             res.push(thumbnail);
+//         }
+//     }
 
-    Ok(res)
-}
+//     Ok(res)
+// }
 
 /// A single thumbnail ready to be written to disk.
 #[derive(Debug)]
@@ -27,7 +27,7 @@ pub struct Thumbnail {
 }
 
 /// Prepares a single thumbnail for writing if it does not currently exist
-fn render_thumbnail(image: &Image, group: &Collection, config: &Config) -> Option<Thumbnail> {
+pub fn render_thumbnail(image: &Image, group: &Collection, config: &Config) -> Option<Thumbnail> {
     let p = config.output_path.join(image.thumbnail_url(group).unwrap());
     
     if !needs_update(&image.path, &p) {
@@ -41,7 +41,6 @@ fn render_thumbnail(image: &Image, group: &Collection, config: &Config) -> Optio
 }
 
 fn needs_update(input_path: &Path, output_path: &Path) -> bool {
-    println!("output path: {:?}", output_path);
     if output_path.exists() {
         let res = || -> Result<bool> {
             let output_modified = output_path.metadata()?.modified()?;

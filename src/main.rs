@@ -20,20 +20,25 @@ struct Cli {
     /// The output directory.
     #[clap(long)]
     output: String,
+
+    /// The resources directory.
+    #[clap(long)]
+    resources: String,
 }
 
 impl Cli {
     fn output_config(&self) -> output::Config {
         output::Config {
+            input_path: PathBuf::from(&self.input),
             output_path: PathBuf::from(&self.output),
+            resources_path: PathBuf::from(&self.resources)
         }
     }
 }
 
 fn run_on_args(args: impl Iterator<Item = std::ffi::OsString>) -> Result<()> {
     let args = Cli::parse_from(args);
-    let input_path = PathBuf::from(&args.input);
-    let gallery = Gallery::from_path(&input_path).with_context(|| "Failed to read gallery")?;
+    let gallery = Gallery::from_path(&PathBuf::from(&args.input)).with_context(|| "Failed to read gallery")?;
     output::write_files(&gallery, &args.output_config()).with_context(|| "Failed to write gallery")
 }
 

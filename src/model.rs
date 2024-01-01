@@ -14,12 +14,6 @@ pub(crate) struct Gallery {
     pub collections: Vec<Collection>,
 }
 
-
-
-
-
-
-
 /// A collection of images.
 #[derive(Deserialize, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub(crate) struct Collection {
@@ -51,13 +45,6 @@ impl Collection {
         to_web_path(&self.path)
     }
 }
-
-
-
-
-
-
-
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub(crate) struct Image {
@@ -102,19 +89,8 @@ impl Image {
     }
 }
 
-
-
-
-
-
-
-
-
-
-
 /// Converts a single-element path into something suitable for a URL.
 fn to_web_path(path: &Path) -> Result<PathBuf> {
-    println!("{:?}", path);
     if path.components().count() != 1 {
         return Err(path_error(
             "Cannot convert multi-component paths into URLs",

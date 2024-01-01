@@ -15,7 +15,7 @@ time = { version = "0.3.9", features = ["macros", "parsing"] }
 image = "0.24.3"
 chrono = "0.4.22"
 date-range = "0.2.2"
-imager = "0.3.2"
+glob = "0.3.1"
 
 [dev-dependencies]
 tempfile = "3.3.0"
