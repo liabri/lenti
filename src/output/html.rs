@@ -34,16 +34,14 @@ pub(super) fn make_templates<'a>(config: &Config) -> Result<Templates<'a>> {
     for template in glob(&res)? {
         let t = template?;
         let file_name = t.file_stem().and_then(|s| s.to_str()).unwrap();
-        let source = config.resources_path.join("templates").join(file_name).with_extension("hbs").into_os_string().into_string().unwrap();
-        handlebars.register_template_file(file_name, source)?;
+        handlebars.register_template_file(file_name, &t)?;
     }
 
     let res = config.resources_path.join("**/*.rhai").display().to_string();
     for script in glob(&res)? {
         let s = script?;
         let file_name = s.file_stem().and_then(|s| s.to_str()).unwrap();
-        let source = config.resources_path.join("scripts").join(file_name).with_extension("rhai").into_os_string().into_string().unwrap();
-        handlebars.register_script_helper_file(file_name, source)?;
+        handlebars.register_script_helper_file(file_name, &s)?;
     }
 
     Ok(Templates(handlebars))

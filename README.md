@@ -1,7 +1,19 @@
 # Lenti
 
-An opinionated static site generator for photo galleries.
+A flexible static site generator for photo galleries.
 
-# Acknowledgments
+## usage
+```
+lenti 0.1.1
+A static site generator for photo galleries
 
-A big thanks to the [gallery](https://github.com/Christoph-D/gallery) project which helped create the strucure of this project.
+USAGE:
+    lenti --input <INPUT> --output <OUTPUT> --resources <RESOURCES>
+
+OPTIONS:
+    -h, --help                     Print help information
+        --input <INPUT>            The gallery, the directory containing albums
+        --output <OUTPUT>          The output directory
+        --resources <RESOURCES>    The resources directory
+    -V, --version                  Print version information
+```

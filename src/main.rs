@@ -13,7 +13,7 @@ use model::Gallery;
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
 struct Cli {
-    /// The source directory.
+    /// The gallery, the directory containing albums
     #[clap(long)]
     input: String,
 
